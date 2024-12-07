@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Static Webpage with Table of Contents</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./tutorial_report/tutorial_report/style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/atom-one-light.min.css">
 </head>
 <body>
@@ -51,7 +51,7 @@
     <section id="section2">
       <h2>Setting up the View</h2>
       <p>Our app will look like the following upon completion:
-        <br><img src="../gifs/final-look.gif" onclick="FullView(this.src)">
+        <br><img src="./tutorial_report/gifs/final-look.gif" onclick="FullView(this.src)">
         <br>In the app, we will display the three charts stacked together in a scrollable view.
         <br>Let's add the following code to our View.swift file:
         <pre>
@@ -195,7 +195,7 @@ class ViewController: UIViewController {
             </ul> 
             The relationship between <i>ChartDataEntry</i>, <i>ChartDataSet</i>, and <i>ChartData</i> is depicted in the following image:
         </p>
-        <img id="chart-structure-img" src="../imgs/ChartDataStructure.png" onclick="FullView(this.src)">
+        <img id="chart-structure-img" src="./tutorial_report/imgs/ChartDataStructure.png" onclick="FullView(this.src)">
       </section>
       <section class="section-subitem" id="section3-subitem2">
         <h3>setupBarChart() function</h3>
@@ -253,7 +253,7 @@ class ViewController: UIViewController {
             from the x axis (in the direction of increasing y values) upon starting up the application.
             <br> Now if we run the app, we will see our first bar chart!
         </p>
-        <img class="full-screen-gif" src="../gifs/bar-chart.gif" onclick="FullView(this.src)">
+        <img class="full-screen-gif" src="./tutorial_report/gifs/bar-chart.gif" onclick="FullView(this.src)">
       </section>
       <section class="section-subitem" id="section3-subitem3">
         <h3>Setting Up Chart X Labels</h3>
@@ -274,7 +274,7 @@ class ViewController: UIViewController {
             <code>valueFormatter</code> attribute. We also adjust the position of the x-axis labels to the bottom of the chart.
             <br> Let's run our app. Now our bar chart has x-axis labels!
         </p>
-        <img class="full-screen-gif" src="../gifs/x-labels.gif" onclick="FullView(this.src)">
+        <img class="full-screen-gif" src="./tutorial_report/gifs/x-labels.gif" onclick="FullView(this.src)">
       </section>
       <section class="section-subitem" id="section3-subitem4">
         <h3>setupLineChart() function</h3>
@@ -313,7 +313,7 @@ class ViewController: UIViewController {
             </pre>
             Let's run the app.
         </p>
-        <br><img class="full-screen-gif" src="../gifs/line-chart.gif" onclick="FullView(this.src)">
+        <br><img class="full-screen-gif" src="./tutorial_report/gifs/line-chart.gif" onclick="FullView(this.src)">
       </section>
       <section class="section-subitem" id="section3-subitem5">
         <h3>setupPieChart() function</h3>
@@ -344,79 +344,83 @@ class ViewController: UIViewController {
             Please visit the <a href="https://github.com/ChartsOrg/Charts" target="_blank">"Charts" documentation</a> for further details on how to accomplish this task.
             Now let's run the app to see the result.
         </p>
-        <img class="full-screen-gif" src="../gifs/pie-chart.gif" onclick="FullView(this.src)">
+        <img class="full-screen-gif" src="./tutorial_report/gifs/pie-chart.gif" onclick="FullView(this.src)">
       </section>
     </section>
     <section id="section4">
         <h2><em>ChartViewDelegate</em></h2>
-        <p>
-            In the "Charts" Cocoapod library, a <code>ChartViewDelegate</code> is a protocol that provides a way for users to interact
-            with the chart view. By implementing this protocol, the ViewController can handle actions such as tapping on a data point
-            in the chart view, selecting chart elements, and responding to gesture interactions.
-            Let's implement the <code>ChartViewDelegate</code> protocol in our ViewController, and print the data point information 
-            to the console when the user selects a data point from the charts.
-            <br>
-            <br>Copy the following code into the ViewController.swift file.
-            <pre>
-                <code>
-extension ViewController: ChartViewDelegate {
-    func chartValueSelected(_ chartView: ChartViewBase, entry: ChartDataEntry, highlight: Highlight) {
-//        NSLog("chartValueSelected");
-        print()
-        if chartView is BarChartView {    
-            print("user taps a value in the bar chart")
-        } else if chartView is LineChartView {
-            print("user taps a value in the line chart")
-        } else {
-            // MARK: the selected data must be from the pie chart
-            print("user taps a value in the pie chart")
+        <div>
+            <p>
+                In the "Charts" Cocoapod library, a <code>ChartViewDelegate</code> is a protocol that provides a way for users to interact
+                with the chart view. By implementing this protocol, the ViewController can handle actions such as tapping on a data point
+                in the chart view, selecting chart elements, and responding to gesture interactions.
+                Let's implement the <code>ChartViewDelegate</code> protocol in our ViewController, and print the data point information 
+                to the console when the user selects a data point from the charts.
+                <br>
+                <br>Copy the following code into the ViewController.swift file.
+                <pre>
+                    <code>
+    extension ViewController: ChartViewDelegate {
+        func chartValueSelected(_ chartView: ChartViewBase, entry: ChartDataEntry, highlight: Highlight) {
+    //        NSLog("chartValueSelected");
+            print()
+            if chartView is BarChartView {    
+                print("user taps a value in the bar chart")
+            } else if chartView is LineChartView {
+                print("user taps a value in the line chart")
+            } else {
+                // MARK: the selected data must be from the pie chart
+                print("user taps a value in the pie chart")
+            }
+            print("the data point is \(entry)")
         }
-        print("the data point is \(entry)")
-    }
-    
-    func chartValueNothingSelected(_ chartView: ChartViewBase) {
-        NSLog("chartValueNothingSelected");
         
-    }
-    
-    func chartScaled(_ chartView: ChartViewBase, scaleX: CGFloat, scaleY: CGFloat) {
-        
-    }
-    
-    func chartTranslated(_ chartView: ChartViewBase, dX: CGFloat, dY: CGFloat) {
-        
-    }
-}
-        
-                    
-                </code>
-            </pre>
-            Then, set the charts' delegate to the <code>ViewController</code> in <code>viewDidLoad()</code>.
-            <pre>
-                <code>
-        override func viewDidLoad() {
-            super.viewDidLoad()
+        func chartValueNothingSelected(_ chartView: ChartViewBase) {
+            NSLog("chartValueNothingSelected");
             
-            mainScreen.barChart.delegate = self
-            mainScreen.lineChart.delegate = self
-            mainScreen.pieChart.delegate = self
-            
-            setupBarChart()
-            setupLineChart()
-            setupPieChart()
         }
-                </code>
-            </pre>
-            Now when we run the app and click on data points on the charts, the console will print where (which chart)
-            the data point is from and the details on this data point.
-        </p>
-        <img id="chart-view-delegate-gif" src="../gifs/chart-view-delegate.gif" onclick="FullView(this.src)">
-        <p>
-            Printing to the console might not seem very useful here, but we can certainly do more complex actions such as 
-            creating a label in this view to display the information of the selected data point.
-            Now you see that by implementing the <code>ChartViewDelegate</code>, the user can interact with our charts!
-        </p>
+        
+        func chartScaled(_ chartView: ChartViewBase, scaleX: CGFloat, scaleY: CGFloat) {
+            
+        }
+        
+        func chartTranslated(_ chartView: ChartViewBase, dX: CGFloat, dY: CGFloat) {
+            
+        }
+    }
+            
+                        
+                    </code>
+                </pre>
+                Then, set the charts' delegate to the <code>ViewController</code> in <code>viewDidLoad()</code>.
+                <pre>
+                    <code>
+            override func viewDidLoad() {
+                super.viewDidLoad()
+                
+                mainScreen.barChart.delegate = self
+                mainScreen.lineChart.delegate = self
+                mainScreen.pieChart.delegate = self
+                
+                setupBarChart()
+                setupLineChart()
+                setupPieChart()
+            }
+                    </code>
+                </pre>
+                Now when we run the app and click on data points on the charts, the console will print where (which chart)
+                the data point is from and the details on this data point.
+            </p>
+            <!-- <img id="chart-view-delegate-gif" src="./tutorial_report/gifs/chart-view-delegate.gif" onclick="FullView(this.src)"> -->
+            <img class="full-screen-gif" src="./tutorial_report/gifs/chart-view-delegate.gif" onclick="FullView(this.src)">
+            <p>
+                Printing to the console might not seem very useful here, but we can certainly do more complex actions such as 
+                creating a label in this view to display the information of the selected data point.
+                Now you see that by implementing the <code>ChartViewDelegate</code>, the user can interact with our charts!
+            </p>
+        </div>
     </section>
+    
     <section id="section5">
         <h2>Reference Code</h2>
         <h3><em>ViewController.swift</em> complete code</h3>
@@ -544,7 +548,7 @@ extension ViewController: ChartViewDelegate {
             </code>
         </pre>
         <h3>Full Tutorial Project</h3>
-        <a href="../reference_code/charts_demo.zip" download class="download-btn">
+        <a href="./tutorial_report/reference_code/charts_demo.zip" download class="download-btn">
             Click to Download Tutorial Project
             <svg id="svg" class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="none" viewBox="0 0 24 24">
                 <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"/>
@@ -566,7 +570,7 @@ extension ViewController: ChartViewDelegate {
         <span id="CloseButton" onclick="CloseFullView()">&times;</span>
     </div>
   </div>
-  <script src="script.js"></script>
+  <script src="./tutorial_report/tutorial_report/script.js"></script>
   <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script> -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/highlightjs-line-numbers.js/dist/highlightjs-line-numbers.min.js"></script>
