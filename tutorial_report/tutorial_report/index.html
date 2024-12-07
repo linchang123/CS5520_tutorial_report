@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Static Webpage with Table of Contents</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/styles/atom-one-light.min.css">
+</head>
+<body>
+  <div class="sidebar">
+    <!-- <aside class="sidebar"> -->
+    <h2>Table of Contents</h2>
+    <ul>
+      <li><a href="#introduction">Introduction</a></li>
+      <li><a href="#section1">Installing and Integrating CocoaPods</a></li>
+      <li><a href="#section2">Setting up the View</a></li>
+      <li><a href="#section3">Setting up ViewController</a></li>
+        <ul>
+            <li class="sublist-item"><a href="#section3-subitem1">Understanding the Chart Structure</a></li>
+            <li class="sublist-item"><a href="#section3-subitem2">setupBarChart() function</a></li>
+            <li class="sublist-item"><a href="#section3-subitem3">Setting Up Chart X Labels</a></li>
+            <li class="sublist-item"><a href="#section3-subitem4">setupLineChart() function</a></li>
+            <li class="sublist-item"><a href="#section3-subitem5">setupPieChart() function</a></li>
+        </ul>
+      <li><a href="#section4"><em>ChartViewDelegate</em></a></li>
+      <li><a href="#section5">Reference Code</a></li>
+      <li><a href="#section6">Resources</a></li>
+    </ul>
+   </div>
+    <!-- </aside> -->
+  <div class="content">
+    <h1>Building Charts in iOS App Using Cocoa Pods "Charts" Module</h1>
+    <h3 id="authors">Tutorial written by CS5520 Group 11 Chang Lin, Guangmei Xiang, Xihuan Liu, Muqing Cao</h3>
+    <section id="introduction">
+      <h2>Introduction</h2>
+      <img src="https://camo.githubusercontent.com/353b07b522d10cffb9d44635bf8e274119aedbbf1f8ae8b202362eacb4bc4b2b/68747470733a2f2f7261772e6769746875622e636f6d2f64616e69656c67696e64692f4368617274732f6d61737465722f4173736574732f666561747572655f677261706869632e706e67">
+      <p><a href="https://github.com/ChartsOrg/Charts" target="_blank">"Charts" </a>is an open-source library for creating various types of charts in iOS apps. 
+        Charts and graphs are particularly useful for visualizing data. 
+        <br>In this tutorial, we will show how to create 3 types of chart: bar chart, line chart, and pie chart using Cocoa Pods "Charts" library.
+    </p>
+    </section>
+    <section id="section1">
+      <h2>Installing and Integrating CocoaPods</h2>
+      <p> Follow the instructions on 
+        <a href="https://iosnu.sakibnm.work/9.-cocoa-pods/9.1.-installing-cocoa-pods" target="_blank">this link </a>
+        to install and integrate CocoaPods in the Xcode project. <br>After creating the "Podfile" using <code>pod init</code>, instead of pasting <code>pod 'Alamofire'</code> under <code># Pods for &lt NameOfYourApp &gt</code>, paste the line <code>pod 'Charts'</code> and install the pod as usual.
+        <br>The .xcworkspace file will be generated, and we will work on this file moving forward (in order to use the installed third-party module).
+      </p>
+    </section>
+    <section id="section2">
+      <h2>Setting up the View</h2>
+      <p>Our app will look like the following upon completion:
+        <br><img src="../gifs/final-look.gif" onclick="FullView(this.src)">
+        <br>In the app, we will display the three charts stacked together in a scrollable view.
+        <br>Let's add the following code to our View.swift file:
+        <pre>
+            <code>
+import Charts
+import UIKit
+
+class View: UIView {
+    
+    var contentWrapper: UIScrollView!
+    var barChart: BarChartView!
+    var lineChart: LineChartView!
+    var pieChart: PieChartView!
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        self.backgroundColor = .white
+        
+        setupContentWrapper()
+        setupBarChart()
+        setupLineChart()
+        setupPieChart()
+        initConstraints()
+    }
+    
+    func setupContentWrapper() {
+        contentWrapper = UIScrollView()
+        contentWrapper.isScrollEnabled = true
+        contentWrapper.showsVerticalScrollIndicator = true
+        contentWrapper.translatesAutoresizingMaskIntoConstraints = false
+        self.addSubview(contentWrapper)
+    }
+    
+    func setupBarChart() {
+        barChart = BarChartView()
+        barChart.translatesAutoresizingMaskIntoConstraints = false
+        contentWrapper.addSubview(barChart)
+    }
+    
+    func setupLineChart() {
+        lineChart = LineChartView()
+        lineChart.translatesAutoresizingMaskIntoConstraints = false
+        contentWrapper.addSubview(lineChart)
+    }
+    
+    func setupPieChart() {
+        pieChart = PieChartView()
+        pieChart.usePercentValuesEnabled = true
+        pieChart.legend.enabled = true
+        pieChart.translatesAutoresizingMaskIntoConstraints = false
+        contentWrapper.addSubview(pieChart)
+    }
+    
+    func initConstraints() {
+        NSLayoutConstraint.activate([
+            contentWrapper.topAnchor.constraint(equalTo: self.safeAreaLayoutGuide.topAnchor),
+            contentWrapper.leadingAnchor.constraint(equalTo: self.safeAreaLayoutGuide.leadingAnchor),
+            contentWrapper.widthAnchor.constraint(equalTo: self.safeAreaLayoutGuide.widthAnchor),
+            contentWrapper.heightAnchor.constraint(equalTo: self.safeAreaLayoutGuide.heightAnchor),
+             contentWrapper.trailingAnchor.constraint(equalTo: self.safeAreaLayoutGuide.trailingAnchor),
+            contentWrapper.bottomAnchor.constraint(equalTo: self.safeAreaLayoutGuide.bottomAnchor),
+            
+            barChart.topAnchor.constraint(equalTo: contentWrapper.topAnchor, constant: 32),
+            barChart.centerXAnchor.constraint(equalTo: contentWrapper.centerXAnchor),
+            barChart.widthAnchor.constraint(equalTo: contentWrapper.widthAnchor),
+            barChart.heightAnchor.constraint(equalToConstant: 300),
+            
+            lineChart.topAnchor.constraint(equalTo: barChart.bottomAnchor, constant: 30),
+            lineChart.centerXAnchor.constraint(equalTo: contentWrapper.centerXAnchor),
+            lineChart.widthAnchor.constraint(equalTo: contentWrapper.widthAnchor),
+            lineChart.heightAnchor.constraint(equalToConstant: 300),
+            
+            pieChart.topAnchor.constraint(equalTo: lineChart.bottomAnchor, constant: 30),
+            pieChart.centerXAnchor.constraint(equalTo: contentWrapper.centerXAnchor),
+            pieChart.widthAnchor.constraint(equalTo: contentWrapper.widthAnchor),
+            pieChart.heightAnchor.constraint(equalToConstant: 300),
+            pieChart.bottomAnchor.constraint(equalTo: contentWrapper.bottomAnchor)
+        ])
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+
+}
+
+            </code>
+        </pre>
+        In the above code, we add the three charts as sub-views of the <code>contentWrapper</code> scrollable view. 
+        Then we anchor the <code>contentWrapper</code> scrollable view to span the whole safe area. 
+      </p>
+    </section>
+    <section id="section3">
+      <h2>Setting up ViewController</h2>
+      <p>Currently our ViewController.swift should be setted up like the following
+        <pre>
+            <code>
+import UIKit
+import Charts
+
+class ViewController: UIViewController {
+    
+    let mainScreen = View()
+    
+    override func loadView() {
+        view = mainScreen
+    }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+    }
+}
+            </code>
+        </pre>
+      </p>
+      <section class="section-subitem" id="section3-subitem1">
+        <h3>Understanding the Chart Structure</h3>
+        <p>
+            Before creating the charts, let's understand how the <code>Charts</code> library structures data for a chart.
+            Data used in building the charts follow hierarchical structure:
+            <ul>
+                <li class="chart-structure">
+                    <b>ChartDataEntry</b> represents a single data point in the chart.
+                    <br>Different types of charts use different subclasses of <i>ChartDataEntry</i>.
+                    <br> For example, <i>BarChartDataEntry</i> is used in representing a single data point in a bar chart, 
+                    and <i>PieChartDataEntry</i> is used in representing a single data point in a pie chart.
+                    <br><i>ChartDataEntry</i> has 2 mandatory fields: <i>x</i> is the datapoint's horizontal position, and
+                    <i>y</i> is the datapoint's vertical position. <i>ChartDataEntry</i> has an optional <i>data</i> field
+                    which takes an object of any type.
+                </li>
+                <li class="chart-structure">
+                    <b>ChartDataSet</b> represents a collection of <i>ChartDataEntry</i> objects.
+                    <br>Like <i>ChartDataEntry</i>, different chart types use different subclasses of <i>ChartDataSet</i>.
+                </li>
+                <li class="chart-structure">
+                    <b>ChartData</b> represents the entire dataset for a chart which can compose of one or more <i>ChartDataSet</i>.
+                    <br>This allows us to display multiple data series on the same chart.
+                    <br>Again, different chart types use different subclasses of <i>ChartData</i>.
+                </li>
+            </ul> 
+            The relationship between <i>ChartDataEntry</i>, <i>ChartDataSet</i>, and <i>ChartData</i> is depicted in the following image:
+        </p>
+        <img id="chart-structure-img" src="../imgs/ChartDataStructure.png" onclick="FullView(this.src)">
+      </section>
+      <section class="section-subitem" id="section3-subitem2">
+        <h3>setupBarChart() function</h3>
+        <p>
+            Now that we have a basic understanding of how data is structured in the charts, we can start building
+            our first chart! 
+            <br>Let's start building a bar chart that shows a person's monthly expense.
+            <br>Copy the following code into the ViewController.swift file:
+            <pre>
+                <code>
+class ViewController: UIViewController {
+
+    let mainScreen = View()
+    //MARK: adding example data
+    let months: [String] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    let monthlyData: [Double] = [1200, 1500, 2000, 1745, 1487, 1865, 2100, 1000, 1762, 2258, 2197, 2074]
+    
+    // code omitted...
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        setupBarChart()
+    }
+
+    func setupBarChart() {
+        // MARK: set up data for bar chart
+        var barChartDataEntries: [BarChartDataEntry] = []
+        for num in 0...months.count - 1 {
+            barChartDataEntries.append(BarChartDataEntry(x: Double(num), y: monthlyData[num]))
+        }
+        let barChartDataSet = BarChartDataSet(entries: barChartDataEntries)
+        barChartDataSet.colors = ChartColorTemplates.colorful()
+        let barChartData = BarChartData(dataSet: barChartDataSet)
+        mainScreen.barChart.data = barChartData
+        
+        // MARK: additional chart customizations
+        mainScreen.barChart.rightAxis.enabled = false
+        mainScreen.barChart.leftAxis.axisMinimum = 0
+        mainScreen.barChart.animate(yAxisDuration: 2.5)
+    }
+}
+            
+                </code>
+            </pre>
+            from line 20 to 22, we are iterating through the <code>monthlyData</code> array constructing each data point as 
+            <code>BarChartDataEntry</code> object.
+            <br>After constructing the <code>ChartDataSet</code> object using an array of <code>BarChartDataEntry</code> objects on line 23,
+            we set the color theme of the bar chart to <code>ChartColorTemplates.colorful()</code>. There are many color templates
+            to use from such as <code>ChartColorTemplates.joyful()</code> and <code>ChartColorTemplates.material()</code>.
+            Feel free to visit the <a href="https://github.com/ChartsOrg/Charts/blob/master/Source/Charts/Utils/ChartColorTemplates.swift" target="_blank">
+                <code>ChartColorTemplates</code> documentation </a> and play around with different color themes.
+            <br>from line 29 to 31, we applied some customizations on the chart such as only displaying the left axis of the chart, fixing
+            the starting value of the left axis to 0, and enabling bar chart animation which will have an effect of the bars "raising up"
+            from the x axis (in the direction of increasing y values) upon starting up the application.
+            <br> Now if we run the app, we will see our first bar chart!
+        </p>
+        <img class="full-screen-gif" src="../gifs/bar-chart.gif" onclick="FullView(this.src)">
+      </section>
+      <section class="section-subitem" id="section3-subitem3">
+        <h3>Setting Up Chart X Labels</h3>
+        <p>
+            Notice that our bar chart is missing labels on the X-axis and we cannot tell what the bars represent. Let's add the months
+            as X-axis labels.
+            <br>Proceed by including the following code in <code>setupBarChart()</code> function:
+            <pre>
+                <code>
+        //MARK: set up x labels for bar chart
+        mainScreen.barChart.xAxis.valueFormatter = IndexAxisValueFormatter(values: months)
+        mainScreen.barChart.xAxis.granularity = 1
+        mainScreen.barChart.xAxis.labelPosition = .bottom
+                </code>
+            </pre>
+            In the above code, we first create a <code>ValueFormatter</code> using the <code>months</code> array which formats the elements
+            in the array for the x-axis. We assign the created <code>ValueFormatter</code> to the bar chart's x-axis 
+            <code>valueFormatter</code> attribute. We also adjust the position of the x-axis labels to the bottom of the chart.
+            <br> Let's run our app. Now our bar chart has x-axis labels!
+        </p>
+        <img class="full-screen-gif" src="../gifs/x-labels.gif" onclick="FullView(this.src)">
+      </section>
+      <section class="section-subitem" id="section3-subitem4">
+        <h3>setupLineChart() function</h3>
+        <p>
+            Let's move on to building a line chart using the same data. The steps are essentially the same as 
+            building the bar chart except this time we will need to use <code>ChartDataEntry</code>, <code>LineChartDataSet</code>,
+            and <code>LineChartData</code> objects.
+            Copy the following <code>setupLineChart()</code> function into ViewController.swift and call it in the 
+            <code>viewDidLoad()</code> method.
+            <pre>
+                <code>
+    func setupLineChart() {
+        // MARK: set up data for line chart
+        var lineChartDataEntries: [ChartDataEntry] = []
+        for num in 0...months.count - 1 {
+            lineChartDataEntries.append(ChartDataEntry(x: Double(num), y: monthlyData[num]))
+        }
+        let lineChartDataSet = LineChartDataSet(entries: lineChartDataEntries)
+        lineChartDataSet.colors = ChartColorTemplates.colorful()
+        let lineChartData = LineChartData(dataSet: lineChartDataSet)
+        mainScreen.lineChart.data = lineChartData
+            
+        //MARK: set up x labels for line chart
+        mainScreen.lineChart.xAxis.valueFormatter = IndexAxisValueFormatter(values: months)
+        mainScreen.lineChart.xAxis.granularity = 1
+        mainScreen.lineChart.xAxis.labelPosition = .bottom
+            
+        // MARK: Additional Chart Customizations
+        mainScreen.lineChart.rightAxis.enabled = false
+        mainScreen.lineChart.leftAxis.axisMinimum = 0
+        mainScreen.lineChart.legend.enabled = true
+        mainScreen.lineChart.animate(yAxisDuration: 3.0)
+        
+    }
+                </code>
+            </pre>
+            Let's run the app.
+        </p>
+        <br><img class="full-screen-gif" src="../gifs/line-chart.gif" onclick="FullView(this.src)">
+      </section>
+      <section class="section-subitem" id="section3-subitem5">
+        <h3>setupPieChart() function</h3>
+        <p>
+            Let's now implement a pie chart using the same data. From the two charts we have built so far, try implementing it yourself
+            and compare your code with the working code below. Remember to call <code>setupPieChart()</code> in <code>viewDidLoad()</code>.
+            <pre>
+                <code>
+        func setupPieChart() {
+            // MARK: set up data for pie chart
+            var pieChartDataEntries: [ChartDataEntry] = []
+            for num in 0...months.count - 1 {
+                pieChartDataEntries.append(ChartDataEntry(x: Double(num), y: monthlyData[num]))
+            }
+            let pieChartDataSet = PieChartDataSet(entries: pieChartDataEntries)
+            pieChartDataSet.colors = ChartColorTemplates.colorful()
+            pieChartDataSet.drawValuesEnabled = false
+            let pieChartData = PieChartData(dataSet: pieChartDataSet)
+            mainScreen.pieChart.data = pieChartData
+            mainScreen.pieChart.animate(yAxisDuration: 2.5)
+        }  
+                </code>
+            </pre>
+            By default, the pie chart will have the unformatted percentage values labelled on the chart. We disabled the percentage display
+            on line 10 for aesthetic reasons. To display nicely formatted percentage values, use a <code>ValueFormatter</code>
+            (similar to the one we use for X-axis labels when building the bar charts and line charts) and set the <code>PieChartDataSet</code>
+            's <code>valueFormatter</code> attribute to the created <code>ValueFormatter</code>.
+            Please visit the <a href="https://github.com/ChartsOrg/Charts" target="_blank">"Charts" documentation</a> for further details on how to accomplish this task.
+            Now let's run the app to see the result.
+        </p>
+        <img class="full-screen-gif" src="../gifs/pie-chart.gif" onclick="FullView(this.src)">
+      </section>
+    </section>
+    <section id="section4">
+        <h2><em>ChartViewDelegate</em></h2>
+        <p>
+            In the "Charts" Cocoapod library, a <code>ChartViewDelegate</code> is a protocol that provides a way for users to interact
+            with the chart view. By implementing this protocol, the ViewController can handle actions such as tapping on a data point
+            in the chart view, selecting chart elements, and responding to gesture interactions.
+            Let's implement the <code>ChartViewDelegate</code> protocol in our ViewController, and print the data point information 
+            to the console when the user selects a data point from the charts.
+            <br>
+            <br>Copy the following code into the ViewController.swift file.
+            <pre>
+                <code>
+extension ViewController: ChartViewDelegate {
+    func chartValueSelected(_ chartView: ChartViewBase, entry: ChartDataEntry, highlight: Highlight) {
+//        NSLog("chartValueSelected");
+        print()
+        if chartView is BarChartView {    
+            print("user taps a value in the bar chart")
+        } else if chartView is LineChartView {
+            print("user taps a value in the line chart")
+        } else {
+            // MARK: the selected data must be from the pie chart
+            print("user taps a value in the pie chart")
+        }
+        print("the data point is \(entry)")
+    }
+    
+    func chartValueNothingSelected(_ chartView: ChartViewBase) {
+        NSLog("chartValueNothingSelected");
+        
+    }
+    
+    func chartScaled(_ chartView: ChartViewBase, scaleX: CGFloat, scaleY: CGFloat) {
+        
+    }
+    
+    func chartTranslated(_ chartView: ChartViewBase, dX: CGFloat, dY: CGFloat) {
+        
+    }
+}
+        
+                    
+                </code>
+            </pre>
+            Then, set the charts' delegate to the <code>ViewController</code> in <code>viewDidLoad()</code>.
+            <pre>
+                <code>
+        override func viewDidLoad() {
+            super.viewDidLoad()
+            
+            mainScreen.barChart.delegate = self
+            mainScreen.lineChart.delegate = self
+            mainScreen.pieChart.delegate = self
+            
+            setupBarChart()
+            setupLineChart()
+            setupPieChart()
+        }
+                </code>
+            </pre>
+            Now when we run the app and click on data points on the charts, the console will print where (which chart)
+            the data point is from and the details on this data point.
+        </p>
+        <img id="chart-view-delegate-gif" src="../gifs/chart-view-delegate.gif" onclick="FullView(this.src)">
+        <p>
+            Printing to the console might not seem very useful here, but we can certainly do more complex actions such as 
+            creating a label in this view to display the information of the selected data point.
+            Now you see that by implementing the <code>ChartViewDelegate</code>, the user can interact with our charts!
+        </p>
+    </section>
+    <section id="section5">
+        <h2>Reference Code</h2>
+        <h3><em>ViewController.swift</em> complete code</h3>
+        <pre>
+            <code>
+
+import UIKit
+import Charts
+
+class ViewController: UIViewController {
+
+    let mainScreen = View()
+     //MARK: adding example data
+     let months: [String] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun","Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+     let monthlyData: [Double] = [1200, 1500, 2000, 1745, 1487, 1865, 2100, 1000, 1762, 2258, 2197, 2074]
+     
+    override func loadView() {
+        view = mainScreen
+    }
+     
+     override func viewDidLoad() {
+         super.viewDidLoad()
+         
+         mainScreen.barChart.delegate = self
+         mainScreen.lineChart.delegate = self
+         mainScreen.pieChart.delegate = self
+         
+         setupBarChart()
+         setupLineChart()
+         setupPieChart()
+     }
+
+     func setupBarChart() {
+         // MARK: set up data for bar chart
+         var barChartDataEntries: [BarChartDataEntry] = []
+         for num in 0...months.count - 1 {
+             barChartDataEntries.append(BarChartDataEntry(x: Double(num), y: monthlyData[num]))
+         }
+         let barChartDataSet = BarChartDataSet(entries: barChartDataEntries)
+         barChartDataSet.colors = ChartColorTemplates.colorful()
+         let barChartData = BarChartData(dataSet: barChartDataSet)
+         mainScreen.barChart.data = barChartData
+         
+         // MARK: additional chart customizations
+         mainScreen.barChart.rightAxis.enabled = false
+         mainScreen.barChart.leftAxis.axisMinimum = 0
+         mainScreen.barChart.animate(yAxisDuration: 2.5)
+         
+         //MARK: set up x labels for bar chart
+         mainScreen.barChart.xAxis.valueFormatter = IndexAxisValueFormatter(values: months)
+         mainScreen.barChart.xAxis.granularity = 1
+         mainScreen.barChart.xAxis.labelPosition = .bottom
+     }
+    
+    func setupLineChart() {
+        // MARK: set up data for line chart
+        var lineChartDataEntries: [ChartDataEntry] = []
+        for num in 0...months.count - 1 {
+            lineChartDataEntries.append(ChartDataEntry(x: Double(num), y: monthlyData[num]))
+        }
+        let lineChartDataSet = LineChartDataSet(entries: lineChartDataEntries)
+        lineChartDataSet.colors = ChartColorTemplates.colorful()
+        let lineChartData = LineChartData(dataSet: lineChartDataSet)
+        mainScreen.lineChart.data = lineChartData
+            
+        //MARK: set up x labels for line chart
+        mainScreen.lineChart.xAxis.valueFormatter = IndexAxisValueFormatter(values: months)
+        mainScreen.lineChart.xAxis.granularity = 1
+        mainScreen.lineChart.xAxis.labelPosition = .bottom
+            
+        // MARK: Additional Chart Customizations
+        mainScreen.lineChart.rightAxis.enabled = false
+        mainScreen.lineChart.leftAxis.axisMinimum = 0
+        mainScreen.lineChart.legend.enabled = true
+        mainScreen.lineChart.animate(yAxisDuration: 3.0)
+        
+    }
+    
+    func setupPieChart() {
+        // MARK: set up data for pie chart
+        var pieChartDataEntries: [ChartDataEntry] = []
+        for num in 0...months.count - 1 {
+            pieChartDataEntries.append(ChartDataEntry(x: Double(num), y: monthlyData[num]))
+        }
+        let pieChartDataSet = PieChartDataSet(entries: pieChartDataEntries)
+        pieChartDataSet.colors = ChartColorTemplates.colorful()
+        pieChartDataSet.drawValuesEnabled = false
+        let pieChartData = PieChartData(dataSet: pieChartDataSet)
+        mainScreen.pieChart.data = pieChartData
+        mainScreen.pieChart.animate(yAxisDuration: 2.5)
+    }
+    
+}
+
+extension ViewController: ChartViewDelegate {
+    func chartValueSelected(_ chartView: ChartViewBase, entry: ChartDataEntry, highlight: Highlight) {
+//        NSLog("chartValueSelected");
+        print()
+        if chartView is BarChartView {
+            print("user taps a value in the bar chart")
+        } else if chartView is LineChartView {
+            print("user taps a value in the line chart")
+        } else {
+            // MARK: the selected data must be from the pie chart
+            print("user taps a value in the pie chart")
+        }
+        print("the data point is \(entry)")
+    }
+    
+    func chartValueNothingSelected(_ chartView: ChartViewBase) {
+        NSLog("chartValueNothingSelected");
+        
+    }
+    
+    func chartScaled(_ chartView: ChartViewBase, scaleX: CGFloat, scaleY: CGFloat) {
+        
+    }
+    
+    func chartTranslated(_ chartView: ChartViewBase, dX: CGFloat, dY: CGFloat) {
+        
+    }
+}
+
+
+            </code>
+        </pre>
+        <h3>Full Tutorial Project</h3>
+        <a href="../reference_code/charts_demo.zip" download class="download-btn">
+            Click to Download Tutorial Project
+            <svg id="svg" class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="none" viewBox="0 0 24 24">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 15v2a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-2m-8 1V4m0 12-4-4m4 4 4-4"/>
+              </svg>
+        </a>
+    </section>
+    <section id="section6">
+        <h2>Resources</h2>
+        <ul>
+            <li>https://github.com/ChartsOrg/Charts</li>
+            <li>https://www.youtube.com/watch?v=mwqz0TOSKI8&t=112s</li>
+            <li>https://www.dhiwise.com/post/display-code-snippets-with-an-html-code-block</li>
+            <li>https://highlightjs.org/</li>
+            <li>https://www.onlineconverter.com/mov-to-gif</li>
+        </ul>
+    </section>
+    <div id="FullImageView">
+        <img id="FullImage">
+        <span id="CloseButton" onclick="CloseFullView()">&times;</span>
+    </div>
+  </div>
+  <script src="script.js"></script>
+  <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.4.0/highlight.min.js"></script> -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.6.0/highlight.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/highlightjs-line-numbers.js/dist/highlightjs-line-numbers.min.js"></script>
+  <script>
+  hljs.highlightAll();
+  hljs.initLineNumbersOnLoad();
+  </script>
+</body>
+</html>
